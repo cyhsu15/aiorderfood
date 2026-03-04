@@ -1,0 +1,49 @@
+# FastAPI 核心套件
+fastapi==0.119.0
+uvicorn[standard]==0.37.0
+pydantic==2.11.9
+pydantic-settings==2.10.1
+python-multipart==0.0.20
+
+# 資料庫相關
+sqlalchemy==2.0.43
+psycopg2-binary==2.9.10  # 開發/測試用，生產環境建議使用 psycopg2
+alembic==1.16.5
+
+# LINE Login 認證
+python-jose[cryptography]==3.5.0
+httpx==0.28.1  # LINE Login API 調用 + FastAPI TestClient 依賴
+
+# 環境變數管理
+python-dotenv==1.1.1
+
+# log
+loguru==0.7.3
+
+# 測試
+pytest==8.4.2
+
+# E2E 測試 (可選，安裝命令: pip install -r test/e2e/requirements.txt)
+# playwright==1.40.0
+# pytest-playwright==0.4.4
+# pytest-base-url==2.1.0
+# pytest-html==4.1.1
+
+# QR Code 生成
+qrcode[pil]==8.0
+Pillow==11.1.0
+
+# AI 功能（聊天推薦與語音辨識）
+openai>=1.0.0  # OpenAI API（包含 Whisper API）
+opencc==1.1.9  # 簡繁體中文轉換
+
+# langchain 相關
+langchain-openai==1.0.2
+langchain-core==1.0.2
+langgraph==1.0.2
+
+
+# 工具腳本相關（可選）
+# 用於 tool/dish_describer/axia_selenium_describer.py
+# selenium==4.27.1
+# beautifulsoup4==4.12.3

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>訂單管理</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  </head>
+  <body class="bg-light">
+    <nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm">
+      <div class="container">
+        <a class="navbar-brand fw-semibold text-primary" href="/admin/">後台首頁</a>
+        <div class="d-flex gap-2">
+          <a class="btn btn-outline-secondary btn-sm" href="/admin/menu.html">菜單管理</a>
+          <a class="btn btn-outline-secondary btn-sm" href="/admin/sessions.html">Session 管理</a>
+          <a class="btn btn-outline-primary btn-sm" href="/">返回前台</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container py-4">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+          <h1 class="h3 fw-semibold mb-1">訂單管理</h1>
+          <p class="text-secondary mb-0">檢視最新訂單、查看明細並更新狀態。</p>
+        </div>
+        <span class="text-secondary" id="orderCountLabel">載入中…</span>
+      </div>
+
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <input type="search" class="form-control" id="keywordInput" placeholder="搜尋訂單編號、聯絡人或備註" />
+            </div>
+            <div class="col-md-3">
+              <select class="form-select" id="statusFilter">
+                <option value="">全部狀態</option>
+                <option value="pending">待處理</option>
+                <option value="preparing">製作中</option>
+                <option value="completed">已完成</option>
+                <option value="cancelled">已取消</option>
+              </select>
+            </div>
+            <div class="col-md-3 text-md-end">
+              <button class="btn btn-outline-primary" id="btnRefresh">重新整理</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>訂單編號</th>
+                  <th>建立時間</th>
+                  <th>狀態</th>
+                  <th>金額</th>
+                  <th>品項數</th>
+                  <th>聯絡人</th>
+                  <th class="text-end">操作</th>
+                </tr>
+              </thead>
+              <tbody id="orderTableBody">
+                <tr><td colspan="7" class="text-center text-secondary py-4">載入資料中...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div class="modal fade" id="orderModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div>
+              <div class="text-secondary small" id="modalOrderId">#</div>
+              <h5 class="modal-title">訂單詳細</h5>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row g-2 align-items-end mb-3">
+              <div class="col-md-4">
+                <label class="form-label">狀態</label>
+                <select class="form-select" id="modalStatus">
+                  <option value="pending">待處理</option>
+                  <option value="preparing">製作中</option>
+                  <option value="completed">已完成</option>
+                  <option value="cancelled">已取消</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">聯絡人</label>
+                <input type="text" class="form-control" id="modalContactName" placeholder="聯絡人姓名" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">聯絡電話</label>
+                <input type="text" class="form-control" id="modalContactPhone" placeholder="聯絡電話" />
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">備註</label>
+              <textarea class="form-control" id="modalNote" rows="3" placeholder="訂單備註"></textarea>
+            </div>
+
+            <div class="card border-0 bg-light-subtle mb-3">
+              <div class="card-body">
+                <div id="modalMeta" class="small text-secondary"></div>
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-sm btn-outline-secondary mb-2" id="btnAddOrderItem">新增品項</button>
+
+            <div class="table-responsive">
+              <table class="table table-sm table-striped align-middle">
+                <thead>
+                  <tr>
+                    <th style="min-width:220px;">品項 / 單價</th>
+                    <th>備註</th>
+                    <th style="width:110px;">數量</th>
+                    <th style="width:130px;">小計</th>
+                    <th style="width:100px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="modalItemsBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">關閉</button>
+            <button type="button" class="btn btn-success" id="btnSaveOrder">儲存更新</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/admin/orders.js"></script>
+  </body>
+</html>

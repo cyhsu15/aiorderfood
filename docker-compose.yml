@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgresAAA
+    environment:
+      POSTGRES_PASSWORD: passwordAAA
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      TZ: Asia/Taipei
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgresAAA_data:/var/lib/postgresql
+    restart: unless-stopped
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssqlDW
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "passwordAAA2!"
+      MSSQL_PID: "Developer"
+      TZ: Asia/Taipei
+    ports:
+      - "14333:1433"
+    volumes:
+      - mssqlDW_data:/var/opt/mssql
+    restart: unless-stopped
+
+volumes:
+  postgresAAA_data:
+    external: true
+  mssqlDW_data:

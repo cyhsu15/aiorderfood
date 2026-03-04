@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Axios Interceptor 測試</title>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #4CAF50;
+      padding-bottom: 10px;
+    }
+    .test-section {
+      margin: 20px 0;
+      padding: 15px;
+      background: #f9f9f9;
+      border-left: 4px solid #2196F3;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .result {
+      margin-top: 10px;
+      padding: 10px;
+      background: #e8f5e9;
+      border-left: 4px solid #4CAF50;
+      font-family: monospace;
+      white-space: pre-wrap;
+      font-size: 12px;
+    }
+    .error {
+      background: #ffebee;
+      border-left-color: #f44336;
+    }
+    code {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Axios Interceptor 測試工具</h1>
+
+    <div class="test-section">
+      <h3>步驟 1: 設定模擬 Session 資料</h3>
+      <p>模擬從 URL 讀取的 sessionid 和 tableid：</p>
+      <button onclick="setupSessionData()">設定 Session 資料到 localStorage</button>
+      <div id="setup-result"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>步驟 2: 檢查 localStorage</h3>
+      <button onclick="checkLocalStorage()">檢查 localStorage 內容</button>
+      <div id="storage-result"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>步驟 3: 測試 API 請求（不帶參數）</h3>
+      <p>直接呼叫 <code>GET /api/cart</code>，不手動附加任何參數</p>
+      <button onclick="testApiRequest()">發送測試請求</button>
+      <div id="api-result"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>步驟 4: 檢查實際發送的 URL</h3>
+      <p>使用 axios interceptor 記錄實際發送的 URL</p>
+      <button onclick="inspectRequest()">檢查請求 URL</button>
+      <div id="inspect-result"></div>
+    </div>
+  </div>
+
+  <script>
+    const TEST_SESSION_ID = 'd5b0ac19-9abd-489f-b41a-3bdd261a2811';
+    const TEST_TABLE_ID = 'A2';
+
+    function setupSessionData() {
+      localStorage.setItem('shared_session_id', TEST_SESSION_ID);
+      localStorage.setItem('shared_table_id', TEST_TABLE_ID);
+
+      const result = document.getElementById('setup-result');
+      result.className = 'result';
+      result.textContent = `✅ 已設定:\n` +
+        `  sessionid: ${TEST_SESSION_ID}\n` +
+        `  tableid: ${TEST_TABLE_ID}`;
+    }
+
+    function checkLocalStorage() {
+      const sessionId = localStorage.getItem('shared_session_id');
+      const tableId = localStorage.getItem('shared_table_id');
+
+      const result = document.getElementById('storage-result');
+      result.className = 'result';
+
+      if (sessionId && tableId) {
+        result.textContent = `✅ localStorage 內容:\n` +
+          `  shared_session_id: ${sessionId}\n` +
+          `  shared_table_id: ${tableId}`;
+      } else {
+        result.className = 'result error';
+        result.textContent = `❌ localStorage 缺少資料`;
+      }
+    }
+
+    async function testApiRequest() {
+      const result = document.getElementById('api-result');
+      result.className = 'result';
+      result.textContent = '⏳ 發送請求中...';
+
+      try {
+        // 不手動附加任何參數，看 interceptor 是否會自動加上
+        const response = await axios.get('/api/cart');
+        result.textContent = `✅ 請求成功!\n` +
+          `狀態碼: ${response.status}\n` +
+          `回應:\n${JSON.stringify(response.data, null, 2)}`;
+      } catch (error) {
+        result.className = 'result error';
+        result.textContent = `❌ 請求失敗:\n${error.message}`;
+      }
+    }
+
+    function inspectRequest() {
+      const result = document.getElementById('inspect-result');
+      result.className = 'result';
+
+      // 移除之前的 interceptor（如果有）
+      axios.interceptors.request.handlers = [];
+
+      // 註冊新的 interceptor 用於檢查
+      axios.interceptors.request.use((config) => {
+        // 模擬主應用程式的邏輯
+        const sessionId = localStorage.getItem('shared_session_id');
+        const tableId = localStorage.getItem('shared_table_id');
+
+        result.textContent = `📋 Interceptor 執行:\n\n` +
+          `1. 從 localStorage 讀取:\n` +
+          `   sessionId: ${sessionId || '(無)'}\n` +
+          `   tableId: ${tableId || '(無)'}\n\n`;
+
+        if (!sessionId && !tableId) {
+          result.textContent += `❌ 沒有 session 資料，跳過處理`;
+          return config;
+        }
+
+        // 解析 URL
+        let url;
+        try {
+          const base = config.baseURL || window.location.origin;
+          url = new URL(config.url, base);
+          result.textContent += `2. 原始 URL:\n   ${url.toString()}\n\n`;
+        } catch {
+          result.textContent += `❌ URL 解析失敗`;
+          return config;
+        }
+
+        // 檢查是否為 API 請求
+        if (!url.pathname.startsWith('/api')) {
+          result.textContent += `ℹ️  非 /api/* 請求，跳過處理`;
+          return config;
+        }
+
+        // 附加參數
+        if (sessionId && !url.searchParams.has('sessionid')) {
+          url.searchParams.set('sessionid', sessionId);
+          result.textContent += `3. ✅ 附加 sessionid\n`;
+        }
+        if (tableId && !url.searchParams.has('tableid')) {
+          url.searchParams.set('tableid', tableId);
+          result.textContent += `4. ✅ 附加 tableid\n`;
+        }
+
+        // 更新 config
+        if (config.baseURL) {
+          config.url = url.toString();
+        } else {
+          config.url = url.pathname + url.search + url.hash;
+        }
+
+        result.textContent += `\n5. 最終 URL:\n   ${config.url}\n\n`;
+        result.textContent += `✅ Interceptor 處理完成`;
+
+        return config;
+      });
+
+      result.textContent += '\n\n⏳ 準備發送測試請求...';
+
+      // 發送測試請求
+      setTimeout(async () => {
+        try {
+          result.textContent += '\n\n📡 正在發送 GET /api/cart...';
+          await axios.get('/api/cart');
+          result.textContent += '\n✅ 請求成功發送!';
+        } catch (error) {
+          result.textContent += `\n❌ 請求失敗: ${error.message}`;
+        }
+      }, 500);
+    }
+  </script>
+</body>
+</html>

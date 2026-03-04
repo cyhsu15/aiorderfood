@@ -1,0 +1,12 @@
+AIOrderFood.code-workspace
+.env
+**/__pycache__
+alembic.ini
+.pytest_cache
+.vscode
+.claude
+ChatAPI.log
+static/public/images/dish_optimized/*
+tool/dish_img_generate/*
+static/public/images/dish/*.png
+nul

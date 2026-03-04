@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>管理後台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+      body {
+        background: linear-gradient(165deg, #f8fafc 0%, #e0e7ff 50%, #f8fafc 100%);
+        min-height: 100vh;
+      }
+      .card-hover:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 1.25rem 3rem rgba(15, 23, 42, 0.18);
+      }
+      .card-hover {
+        transition: all .2s ease;
+      }
+    </style>
+  </head>
+  <body class="pb-5">
+    <nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm">
+      <div class="container">
+        <a class="navbar-brand fw-semibold text-primary" href="/admin/">AI Order Food 後台</a>
+        <div class="d-flex gap-2">
+          <a class="btn btn-outline-primary btn-sm" href="/">返回前台</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container py-5">
+      <div class="row mb-4 align-items-center">
+        <div class="col-lg-8">
+          <span class="badge bg-primary-subtle text-primary-emphasis mb-2">控制台</span>
+          <h1 class="fw-semibold mb-2">管理總覽</h1>
+          <p class="text-secondary mb-0">集中入口協助快速抵達各項管理工具，掌握菜單、套餐、訂單與 Session 狀態。</p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-6 col-xxl-3">
+          <div class="card card-hover h-100 shadow border-0">
+            <div class="card-body d-flex flex-column">
+              <h2 class="h5 fw-semibold">菜單管理</h2>
+              <p class="text-secondary flex-grow-1">維護餐點分類、品項與價格，支援詳細描述與標籤設定，確保前台菜單最新。</p>
+              <a href="/admin/menu.html" class="btn btn-primary">前往菜單管理</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-xxl-3">
+          <div class="card card-hover h-100 shadow border-0">
+            <div class="card-body d-flex flex-column">
+              <h2 class="h5 fw-semibold">套餐管理</h2>
+              <p class="text-secondary flex-grow-1">編排套餐內容，調整組合順序、份量與關聯菜色，對應前台套餐呈現。</p>
+              <a href="/admin/set_editor.html" class="btn btn-primary">前往套餐管理</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-xxl-3">
+          <div class="card card-hover h-100 shadow border-0">
+            <div class="card-body d-flex flex-column">
+              <h2 class="h5 fw-semibold">訂單管理</h2>
+              <p class="text-secondary flex-grow-1">檢視最新訂單、查看明細並更新狀態，掌握顧客聯絡資訊與備註。</p>
+              <a href="/admin/orders.html" class="btn btn-primary">前往訂單管理</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-xxl-3">
+          <div class="card card-hover h-100 shadow border-0">
+            <div class="card-body d-flex flex-column">
+              <h2 class="h5 fw-semibold">Session 管理</h2>
+              <p class="text-secondary flex-grow-1">追蹤未登入使用者 Session 與購物車內容，必要時可清空或刪除。</p>
+              <a href="/admin/sessions.html" class="btn btn-primary">前往 Session 管理</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-xxl-3">
+          <div class="card card-hover h-100 shadow border-0">
+            <div class="card-body d-flex flex-column">
+              <h2 class="h5 fw-semibold">QR Code 生成</h2>
+              <p class="text-secondary flex-grow-1">為餐桌生成專屬 QR Code，讓顧客掃描後加入共享點餐，即時同步購物車。</p>
+              <a href="/admin/qrcode.html" class="btn btn-primary">前往 QR Code 生成</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-5 d-flex flex-wrap gap-3 text-secondary">
+        <span>若需新增其他管理工具，可在此頁延伸入口。</span>
+        <a class="link-primary" href="mailto:ops@example.com">聯絡系統管理員</a>
+      </div>
+    </main>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

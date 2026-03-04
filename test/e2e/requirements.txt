@@ -1,0 +1,5 @@
+# E2E 測試依賴
+playwright==1.40.0
+pytest-playwright==0.4.4
+pytest-base-url==2.1.0
+pytest-html==4.1.1

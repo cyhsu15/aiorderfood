@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>LINE Login Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+        padding: 24px;
+        background: #f7f7f7;
+      }
+      .container {
+        max-width: 520px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      }
+      h1 {
+        margin-top: 0;
+      }
+      .btn {
+        display: inline-block;
+        padding: 12px 18px;
+        border-radius: 8px;
+        background: #06c755;
+        color: #fff;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .btn:hover {
+        background: #04ad49;
+      }
+      .message {
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: 8px;
+        background: #eef9f1;
+        color: #0a4f25;
+      }
+      .avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        object-fit: cover;
+        display: block;
+        margin: 12px 0;
+      }
+      .user-info {
+        padding-left: 18px;
+        margin: 8px 0 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>LINE Login Demo</h1>
+      <p>Click the button below to start LINE Login. After authentication you will be redirected back here and your profile will be displayed.</p>
+      <a class="btn" href="/auth/line/login">Sign in with LINE</a>
+
+      <div id="status"></div>
+    </div>
+
+    <script>
+      const status = document.getElementById("status");
+      const params = new URLSearchParams(window.location.search);
+
+      const getParam = (key) => params.get(key) || "";
+
+      if (params.get("login") === "success") {
+        const name = getParam("displayName");
+        const avatar = getParam("avatar");
+        const email = getParam("email");
+        const userId = getParam("userId");
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "message";
+
+        const heading = document.createElement("strong");
+        heading.textContent = "Login successful!";
+        wrapper.appendChild(heading);
+
+        if (name) {
+          wrapper.appendChild(document.createTextNode(` Welcome, ${name}.`));
+        }
+
+        if (avatar) {
+          const img = document.createElement("img");
+          img.src = avatar;
+          img.alt = "LINE avatar";
+          img.className = "avatar";
+          wrapper.appendChild(img);
+        }
+
+        const infoList = document.createElement("ul");
+        infoList.className = "user-info";
+
+        const appendItem = (label, value) => {
+          if (value) {
+            const li = document.createElement("li");
+            li.textContent = `${label}: ${value}`;
+            infoList.appendChild(li);
+          }
+        };
+
+        appendItem("User ID", userId);
+        appendItem("Email", email);
+        appendItem("Display name", name);
+        appendItem("Avatar URL", avatar);
+
+        wrapper.appendChild(infoList);
+        status.appendChild(wrapper);
+      } else if (params.get("error")) {
+        const message = getParam("error");
+        const wrapper = document.createElement("div");
+        wrapper.className = "message";
+        wrapper.style.background = "#fff2f2";
+        wrapper.style.color = "#a40000";
+
+        const heading = document.createElement("strong");
+        heading.textContent = "Login failed: ";
+        wrapper.appendChild(heading);
+        wrapper.appendChild(document.createTextNode(message));
+
+        status.appendChild(wrapper);
+      }
+    </script>
+  </body>
+</html>

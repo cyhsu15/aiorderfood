@@ -6,7 +6,8 @@ AI 聊天與推薦核心邏輯（最終穩定版 v8-service）
 
 import os, re, json, sqlite3, tempfile
 from contextvars import ContextVar
-from typing import TypedDict, Annotated, Any, Dict, List, Literal, Optional
+from typing import TypedDict, Annotated, Any, Dict, List, Literal, Optional, Tuple
+from datetime import date, timedelta
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import AnyMessage, HumanMessage, AIMessage
@@ -144,6 +145,7 @@ def fetch_dishes_by_names(db: Session, dish_names: List[str]) -> Dict[str, Dict[
                 d.dish_id,
                 d.name_zh,
                 dd.image_url,
+                dp.price_id,
                 dp.price_label,
                 dp.price,
                 ROW_NUMBER() OVER (PARTITION BY d.dish_id ORDER BY dp.price_id) as rn
@@ -156,6 +158,7 @@ def fetch_dishes_by_names(db: Session, dish_names: List[str]) -> Dict[str, Dict[
             dish_id,
             name_zh,
             image_url,
+            price_id,
             price_label,
             price
         FROM ranked_prices
@@ -173,12 +176,63 @@ def fetch_dishes_by_names(db: Session, dish_names: List[str]) -> Dict[str, Dict[
             "name": r["name_zh"],
             "price": float(r["price"]) if r["price"] else 0.0,
             "size": r["price_label"],
-            "image_url": f"/images/dish/{r['dish_id']}.webp" if r["dish_id"] else "/images/default.png"
+            "image_url": f"/images/dish/{r['dish_id']}.webp" if r["dish_id"] else "/images/default.png",
+            "price_id": int(r["price_id"]) if r["price_id"] is not None else None
         }
 
     logger.debug(f"批量查詢菜品: 請求 {len(dish_names)} 道，找到 {len(dish_map)} 道")
 
     return dish_map
+
+
+def fetch_forecast_coverage(db: Session) -> Tuple[Optional[date], Optional[date]]:
+    r = db.execute(text("""
+        SELECT
+          MIN(target_date) AS min_target_date,
+          MAX(target_date) AS max_target_date
+        FROM integration.vw_forecast_for_llm_latest
+    """)).mappings().first()
+    if not r or (r["max_target_date"] is None):
+        return None, None
+    return r["min_target_date"], r["max_target_date"]
+
+
+def fetch_forecast_for_prices(
+    db: Session,
+    price_ids: List[int],
+    start_date: date,
+    end_date: date
+) -> Dict[int, List[Dict[str, Any]]]:
+    if not price_ids:
+        return {}
+    
+    rows = db.execute(text("""
+        SELECT
+          price_id,
+          target_date,
+          yhat,
+          model_version,
+          forecast_origin_date
+        FROM integration.vw_forecast_for_llm_latest
+        WHERE price_id = ANY(:price_ids)
+          AND target_date BETWEEN :start_date AND :end_date
+        ORDER BY price_id, target_date
+    """), {
+        "price_ids": price_ids,
+        "start_date": start_date,
+        "end_date": end_date
+    }).mappings().all()
+    
+    out: Dict[int, List[Dict[str, Any]]] = {}
+    for r in rows:
+        pid = int(r["price_id"])
+        out.setdefault(pid, []).append({
+            "target_date": r["target_date"].isoformat(),
+            "yhat": float(r["yhat"]),
+            "model_version": r["model_version"],
+            "forecast_origin_date": r["forecast_origin_date"].isoformat(),
+        })
+    return out
 
 
 def enrich_recommendations_with_db_data(
@@ -242,6 +296,81 @@ def enrich_recommendations_with_db_data(
 
     return valid_recommendations
 
+
+def fetch_existing_forecast_price_ids(db: Session, price_ids: List[int]) -> set[int]:
+    if not price_ids:
+        return set()
+
+    rows = db.execute(text("""
+        SELECT DISTINCT price_id
+        FROM integration.vw_forecast_for_llm_latest
+        WHERE price_id = ANY(:price_ids)
+    """), {"price_ids": price_ids}).mappings().all()
+
+    return {int(r["price_id"]) for r in rows}
+
+
+def attach_forecast_to_recommendations(
+    db: Session,
+    recs: List[Dict[str, Any]],
+    *,
+    horizon_days: int = 6,
+    start_from: Optional[date] = None,
+) -> List[Dict[str, Any]]:
+    if not recs:
+        return recs
+
+    # 1) 決定推薦日（先用 today；你也可以改成 tomorrow）
+    start = start_from or date.today()
+    end = start + timedelta(days=horizon_days - 1)
+
+    # 2) 用 coverage gate，避免超出你現有 forecast 範圍
+    _, max_td = fetch_forecast_coverage(db)
+    if max_td is None:
+        # view 裡完全沒有任何 forecast
+        for r in recs:
+            r["forecast_status"] = "missing"
+        return recs
+
+    # ✅ 如果今天已經超出 forecast coverage：
+    #    - 有出現在 view 的 price_id：代表「曾有預測，但不覆蓋今天」→ stale
+    #    - 沒出現在 view 的 price_id：代表「根本沒有預測」→ missing
+    if start > max_td:
+        price_ids = [int(r["price_id"]) for r in recs if r.get("price_id") is not None]
+        existing = fetch_existing_forecast_price_ids(db, price_ids)
+
+        for r in recs:
+            pid = r.get("price_id")
+            if pid is None:
+                r["forecast_status"] = "missing"
+            else:
+                r["forecast_status"] = "stale" if int(pid) in existing else "missing"
+        return recs
+
+    # clamp end
+    if end > max_td:
+        end = max_td
+
+    # 3) 批次查 forecast（coverage 內）
+    price_ids = [int(r["price_id"]) for r in recs if r.get("price_id") is not None]
+    fc_map = fetch_forecast_for_prices(db, price_ids, start, end)
+
+    # 4) attach
+    for r in recs:
+        pid = r.get("price_id")
+        if pid is None:
+            r["forecast_status"] = "missing"
+            continue
+
+        series = fc_map.get(int(pid))
+        if series:
+            r["forecast_6d"] = series
+            r["forecast_status"] = "ok"
+        else:
+            # 在 coverage 內查不到，通常代表：policy/mapping/資料缺漏
+            r["forecast_status"] = "missing"
+
+    return recs
 
 # ==========================================================
 # 🧠 狀態結構
@@ -536,6 +665,8 @@ def budget_node(state: GraphState) -> GraphState:
     )
     logger.info(f"預算推薦 [{plan_mode}]: {people}人 × {per_person}元 = {total}元 | 推薦 {len(data['recommendations'])} 道菜")
     logger.debug(f"推薦數據結構: {json.dumps(data, ensure_ascii=False, indent=2)}")
+    
+    data["recommendations"] = attach_forecast_to_recommendations(db, data["recommendations"])
 
     # === 6️⃣ 回傳結果 ===
     return {
@@ -619,6 +750,8 @@ def recommend_node(state: GraphState) -> GraphState:
     logger.info(f"智能推薦完成: 生成 {len(data['recommendations'])} 道菜 → {[r['name'] for r in data['recommendations']]}")
     logger.debug(f"推薦數據結構: {json.dumps(data, ensure_ascii=False, indent=2)}")
 
+    data["recommendations"] = attach_forecast_to_recommendations(db, data["recommendations"])
+    
     return {
         "messages": [AIMessage(content=data.get("message", "完成推薦"))],
         "response": data,
