@@ -190,7 +190,7 @@ def fetch_forecast_coverage(db: Session) -> Tuple[Optional[date], Optional[date]
         SELECT
           MIN(target_date) AS min_target_date,
           MAX(target_date) AS max_target_date
-        FROM integration.vw_forecast_for_llm_latest
+        FROM integration.vw_forecast_for_llm_serving
     """)).mappings().first()
     if not r or (r["max_target_date"] is None):
         return None, None
@@ -213,7 +213,7 @@ def fetch_forecast_for_prices(
           yhat,
           model_version,
           forecast_origin_date
-        FROM integration.vw_forecast_for_llm_latest
+        FROM integration.vw_forecast_for_llm_serving
         WHERE price_id = ANY(:price_ids)
           AND target_date BETWEEN :start_date AND :end_date
         ORDER BY price_id, target_date
@@ -303,7 +303,7 @@ def fetch_existing_forecast_price_ids(db: Session, price_ids: List[int]) -> set[
 
     rows = db.execute(text("""
         SELECT DISTINCT price_id
-        FROM integration.vw_forecast_for_llm_latest
+        FROM integration.vw_forecast_for_llm_serving
         WHERE price_id = ANY(:price_ids)
     """), {"price_ids": price_ids}).mappings().all()
 
@@ -320,21 +320,23 @@ def attach_forecast_to_recommendations(
     if not recs:
         return recs
 
-    # 1) 決定推薦日（先用 today；你也可以改成 tomorrow）
+    # 先保證每筆都有 forecast_6d / forecast_status 欄位
+    for r in recs:
+        r["forecast_6d"] = []
+        r["forecast_status"] = "missing"
+
+    # 1) 決定推薦日起點
     start = start_from or date.today()
     end = start + timedelta(days=horizon_days - 1)
 
-    # 2) 用 coverage gate，避免超出你現有 forecast 範圍
+    # 2) coverage gate
     _, max_td = fetch_forecast_coverage(db)
     if max_td is None:
-        # view 裡完全沒有任何 forecast
         for r in recs:
             r["forecast_status"] = "missing"
         return recs
 
-    # ✅ 如果今天已經超出 forecast coverage：
-    #    - 有出現在 view 的 price_id：代表「曾有預測，但不覆蓋今天」→ stale
-    #    - 沒出現在 view 的 price_id：代表「根本沒有預測」→ missing
+    # 如果今天已經超出 coverage
     if start > max_td:
         price_ids = [int(r["price_id"]) for r in recs if r.get("price_id") is not None]
         existing = fetch_existing_forecast_price_ids(db, price_ids)
@@ -343,15 +345,17 @@ def attach_forecast_to_recommendations(
             pid = r.get("price_id")
             if pid is None:
                 r["forecast_status"] = "missing"
+                r["forecast_6d"] = []
             else:
                 r["forecast_status"] = "stale" if int(pid) in existing else "missing"
+                r["forecast_6d"] = []
         return recs
 
     # clamp end
     if end > max_td:
         end = max_td
 
-    # 3) 批次查 forecast（coverage 內）
+    # 3) 批次查 forecast
     price_ids = [int(r["price_id"]) for r in recs if r.get("price_id") is not None]
     fc_map = fetch_forecast_for_prices(db, price_ids, start, end)
 
@@ -360,17 +364,19 @@ def attach_forecast_to_recommendations(
         pid = r.get("price_id")
         if pid is None:
             r["forecast_status"] = "missing"
+            r["forecast_6d"] = []
             continue
 
-        series = fc_map.get(int(pid))
+        series = fc_map.get(int(pid), [])
         if series:
             r["forecast_6d"] = series
             r["forecast_status"] = "ok"
         else:
-            # 在 coverage 內查不到，通常代表：policy/mapping/資料缺漏
+            r["forecast_6d"] = []
             r["forecast_status"] = "missing"
 
     return recs
+
 
 # ==========================================================
 # 🧠 狀態結構

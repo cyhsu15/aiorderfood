@@ -1,13 +1,20 @@
-"""Weekly forecast runner (DW -> baseline + model -> dw.fact_forecast_daily).
+"""Weekly forecast runner (DW history -> baseline + model -> PG integration.fact_forecast_daily).
 
 Responsibilities:
 - Read history from dw.vw_model_input_csv_compat via load_and_clean(config)
 - Produce BOTH baseline and model forecasts (policy is downstream)
-- Write all results into dw.fact_forecast_daily with run_id for idempotency
+- Write all results directly into PostgreSQL integration.fact_forecast_daily
 
 Origin rule:
 - origin_date must be Monday
 - horizon is Tue..Sun (6 days)
+
+Usage example:
+    python -m app.pipeline.weekly_forecast \
+    --origin-date 2025-09-29 \
+    --baseline-config ../EDA_v3/configs/config_001.yaml \
+    --config ../EDA_v3/configs/config_003_lgbm_final.yaml \
+    --model-path ../EDA_v3/runs/.../lgbm_final.txt
 """
 
 from __future__ import annotations
@@ -26,10 +33,9 @@ import os
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
-load_dotenv()
 
-from app.forecast.repo import ForecastRow
-from app.forecast.service import ForecastService
+from app.forecast_pg.repo import ForecastRow
+from app.forecast_pg.service import ForecastService
 from app.forecasting.data import load_and_clean
 from app.forecasting.features import build_features_for_forecast, build_horizon_dates
 from app.forecasting.model import load_model, predict_lgbm
@@ -37,8 +43,8 @@ from app.forecasting.postprocess import postprocess_yhat
 from app.forecasting.train import train_model, predict
 
 # Keep as CLI override-able for portability
-DEFAULT_BASELINE_CONFIG_PATH = Path(r"..\EDA_v3\configs\backtest_baseline.yaml")
-DEFAULT_BASELINE_VERSION = "baseline_k4_median_canonicalid_dow_v1"
+DEFAULT_BASELINE_CONFIG_PATH = Path(r"..\EDA_v3\configs\config_001.yaml")
+
 
 
 def parse_args() -> argparse.Namespace:
@@ -54,14 +60,18 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument(
         "--baseline-version",
-        default=DEFAULT_BASELINE_VERSION,
-        help="model_version string for baseline rows",
+        default=None,
+        help="model_version string for baseline rows. If omitted, use baseline config's experiment.model_version",
     )
 
     # Model is optional: if provided, we run model inference + write rows
     p.add_argument("--config", default=None, help="Path to model config yaml (feature set + schema)")
     p.add_argument("--model-path", default=None, help="Path to trained model artifact (e.g., lgbm_final.txt)")
-    p.add_argument("--model-version", default=None, help="model_version string for model rows")
+    p.add_argument(
+        "--model-version",
+        default=None,
+        help="model_version string for model rows. If omitted, use model config's experiment.model_version",
+    )
 
     p.add_argument(
         "--run-id",
@@ -81,24 +91,30 @@ def ensure_date(x) -> date:
     return pd.to_datetime(x).date()
 
 
-def get_dw_session():
-    """Create a SQLAlchemy Session connected to DW MSSQL (not OLTP Postgres)."""
-    host = os.getenv("DW_MSSQL_HOST")
-    port = os.getenv("DW_MSSQL_PORT")
-    db   = os.getenv("DW_MSSQL_DB")
-    user = os.getenv("DW_MSSQL_USER")
-    pwd  = os.getenv("DW_MSSQL_PASSWORD")
-    driver = os.getenv("DW_MSSQL_DRIVER", "ODBC Driver 17 for SQL Server")
+def get_pg_session():
+    """Create SQLAlchemy Session for PostgreSQL using pg_integration/config/pg.env"""
+    from pathlib import Path
+    
+    PROJECT_ROOT = Path(__file__).resolve().parents[2]
+    ENV_PATH = PROJECT_ROOT / "pg_integration" / "config" / "pg.env"
+
+    if not ENV_PATH.exists():
+        raise RuntimeError(f"pg.env not found: {ENV_PATH}")
+
+    load_dotenv(ENV_PATH)
+    
+    host = os.getenv("PG_HOST")
+    port = os.getenv("PG_PORT")
+    db   = os.getenv("PG_DB")
+    user = os.getenv("PG_USER")
+    pwd  = os.getenv("PG_PASSWORD")
 
     if not all([host, port, db, user, pwd]):
         raise RuntimeError(
-            "DW MSSQL env vars missing. Need: DW_MSSQL_HOST, DW_MSSQL_PORT, DW_MSSQL_DB, DW_MSSQL_USER, DW_MSSQL_PASSWORD"
+            "PG env vars missing. Need: PG_HOST, PG_PORT, PG_DB, PG_USER, PG_PASSWORD"
         )
 
-    conn_str = (
-        f"mssql+pyodbc://{user}:{pwd}@{host}:{port}/{db}"
-        f"?driver={driver.replace(' ', '+')}"
-    )
+    conn_str = f"postgresql+psycopg2://{user}:{pwd}@{host}:{port}/{db}"
     engine = sa.create_engine(conn_str, pool_pre_ping=True, future=True)
     return sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)()
 
@@ -115,6 +131,10 @@ def main() -> None:
     # 1) Load history (single source of truth)
     cfg_base = load_config(args.baseline_config)
     df = load_and_clean(cfg_base)
+    
+    baseline_version = args.baseline_version or cfg_base.get("experiment", {}).get("model_version")
+    if not baseline_version:
+        raise ValueError("baseline_version missing: provide --baseline-version or set experiment.model_version in baseline config")
 
     data_cfg = cfg_base.get("data", {})
     date_col = data_cfg.get("date_col", "CloseWorkDate")
@@ -180,23 +200,28 @@ def main() -> None:
                 forecast_origin_date=origin_date,
                 target_date=ensure_date(td),
                 yhat=Decimal(int(yh)),
-                model_version=args.baseline_version,
+                model_version=baseline_version,
                 run_id=run_id,
             )
         )
 
     print("[DEBUG] run_id:", run_id)
-    print("[DEBUG] baseline rows:", len(baseline_rows), "version:", args.baseline_version)
+    print("[DEBUG] baseline rows:", len(baseline_rows), "version:", baseline_version)
 
     # ==========================================================
     # B) MODEL (OPTIONAL)
     # ==========================================================
     model_rows: List[ForecastRow] = []
     if args.model_path:
-        if not args.config or not args.model_version:
-            raise ValueError("--model-path provided; you must also provide --config and --model-version")
+        if not args.config:
+            raise ValueError("--model-path provided; you must also provide --config")
 
         cfg_model = load_config(args.config)
+        
+        model_version = args.model_version or cfg_model.get("experiment", {}).get("model_version")
+        if not model_version:
+            raise ValueError("model_version missing: provide --model-version or set experiment.model_version in model config")
+        
         model = load_model(args.model_path)
 
         X_forecast, feature_cols = build_features_for_forecast(
@@ -229,12 +254,12 @@ def main() -> None:
                     forecast_origin_date=origin_date,
                     target_date=td,
                     yhat=Decimal(yh),
-                    model_version=args.model_version,
+                    model_version=model_version,
                     run_id=run_id,
                 )
             )
 
-        print("[DEBUG] model rows:", len(model_rows), "version:", args.model_version)
+        print("[DEBUG] model rows:", len(model_rows), "version:", model_version)
     else:
         print("[DEBUG] --model-path not provided; skip model inference.")
 
@@ -252,10 +277,10 @@ def main() -> None:
         return
 
     svc = ForecastService()
-    with get_dw_session() as db:
+    with get_pg_session() as db:
         n = svc.upsert_forecasts(db, rows)
 
-    print(f"[OK] upserted {n} rows into dw.fact_forecast_daily")
+    print(f"[OK] upserted {n} rows into integration.fact_forecast_daily")
     print(f"[OK] origin_date={origin_date}")
     print(f"[OK] baseline_version={args.baseline_version} rows={len(baseline_rows)}")
     if model_rows:
