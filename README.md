@@ -42,48 +42,45 @@
 # 系統架構
 
 ```mermaid
-flowchart TB
- subgraph SRC["資料來源"]
-        POS["POS 銷量資料"]
-        MENU["菜單資料"]
-  end
+flowchart LR
 
- subgraph DW["Data Warehouse (MSSQL)"]
-        CLEAN["Clean Views"]
-        CANON["Canonical Dish Mapping"]
-        FACT["fact_daily_demand_actual"]
-  end
+subgraph SRC["Data Sources"]
+    POS["POS Sales"]
+    MENU["Menu"]
+end
 
- subgraph ML["需求預測實驗平台"]
-        TRAIN["模型訓練"]
-        BACKTEST["時間序列回測"]
-  end
+subgraph DW["Data Warehouse (MSSQL)"]
+    CLEAN["Clean & Canonical Mapping"]
+    FACT_A["fact_daily_demand_actual"]
+end
 
- subgraph PIPE["Forecast Pipeline"]
-        FORECAST["weekly_forecast.py"]
-        FACT_F["fact_forecast_daily"]
-  end
+subgraph ML["Forecast System"]
+    TRAIN["Experiment Platform<br/>(training + backtest)"]
+    WF["Forecast Pipeline<br/>(weekly_forecast.py)"]
+end
 
- subgraph POLICY["Policy Layer"]
-        POLICY_T["forecast_policy"]
-  end
+subgraph POLICY["Policy Layer"]
+    FACT_F["fact_forecast_daily"]
+    POLICY_T["forecast_policy"]
+end
 
- subgraph APP["應用層"]
-        VIEW["vw_forecast_for_llm_latest"]
-        LLM["LLM 推薦系統"]
-  end
+subgraph APP["LLM Application"]
+    VIEW["vw_forecast_for_llm_latest"]
+    LLM["LLM Recommendation"]
+end
 
-    POS --> CLEAN
-    MENU --> CLEAN
-    CLEAN --> CANON
-    CANON --> FACT
-    FACT --> TRAIN
-    TRAIN --> BACKTEST
-    TRAIN --> FORECAST
-    FORECAST --> FACT_F
-    FACT_F --> POLICY_T
-    POLICY_T --> VIEW
-    VIEW --> LLM
+POS --> CLEAN
+MENU --> CLEAN
+CLEAN --> FACT_A
+
+FACT_A --> TRAIN
+TRAIN --> WF
+
+WF --> FACT_F
+FACT_F --> POLICY_T
+
+POLICY_T --> VIEW
+VIEW --> LLM
 ```
 
 整體系統將 **營運資料 → 需求預測 → LLM 推薦** 串接成完整 AI pipeline。
@@ -120,13 +117,12 @@ flowchart TB
 ```mermaid
 flowchart TB
     BT["Backtest Results"]
-    MAE["Model Evaluation"]
+
     POLICY["Policy Selection"]
     FORECAST["Forecast Generation"]
     SERVE["Serving View"]
 
-    BT --> MAE
-    MAE --> POLICY
+    BT --> POLICY
     POLICY --> FORECAST
     FORECAST --> SERVE
 ```
@@ -161,7 +157,7 @@ aiorderfood
 
 需求預測模型的訓練與回測在獨立 repo 中完成：
 
-**aiorderfood-ml**
+👉 [**aiorderfood-ml**](https://github.com/cyhsu15/aiorderfood-ml)
 
 ```
 Data Warehouse
