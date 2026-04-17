@@ -54,7 +54,8 @@ def load_and_clean(config: Dict[str, Any]) -> pd.DataFrame:
         
         conn_str = (
             f"mssql+pyodbc://{user}:{pwd}@{host}:{port}/{db}"
-            "?driver=ODBC+Driver+17+for+SQL+Server"
+            "?driver=ODBC+Driver+18+for+SQL+Server"
+            "&TrustServerCertificate=yes"
         )
 
         engine = sa.create_engine(conn_str)

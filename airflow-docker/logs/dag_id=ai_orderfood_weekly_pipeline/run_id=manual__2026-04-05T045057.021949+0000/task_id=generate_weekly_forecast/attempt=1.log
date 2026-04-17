@@ -1,0 +1,136 @@
+{"timestamp":"2026-04-05T04:51:06.063006Z","level":"info","event":"DAG bundles loaded: dags-folder, example_dags","logger":"airflow.dag_processing.bundles.manager.DagBundlesManager","filename":"manager.py","lineno":179}
+{"timestamp":"2026-04-05T04:51:06.065440Z","level":"info","event":"Filling up the DagBag from /opt/airflow/dags/ai_orderfood_pipeline.py","logger":"airflow.models.dagbag.BundleDagBag","filename":"dagbag.py","lineno":593}
+{"timestamp":"2026-04-05T04:51:06.086823Z","level":"warning","event":"The `airflow.operators.python.PythonOperator` attribute is deprecated. Please use `'airflow.providers.standard.operators.python.PythonOperator'`.","category":"DeprecatedImportWarning","filename":"/opt/airflow/dags/ai_orderfood_pipeline.py","lineno":49,"logger":"py.warnings"}
+{"timestamp":"2026-04-05T04:51:06.090148Z","level":"info","event":"Stats instance was created in PID 7 but accessed in PID 386. Re-initializing.","logger":"airflow.stats","filename":"stats.py","lineno":57}
+{"timestamp":"2026-04-05T04:51:06.140355Z","level":"info","event":"Task instance is in running state","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:06.140824Z","level":"info","event":" Previous state of the Task instance: TaskInstanceState.QUEUED","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:06.141324Z","level":"info","event":"Current task name:generate_weekly_forecast","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:06.141757Z","level":"info","event":"Dag name:ai_orderfood_weekly_pipeline","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:06.143512Z","level":"warning","event":"Using Variable.get from `airflow.models` is deprecated.Please use `get` on Variable from sdk(`airflow.sdk.Variable`) instead","category":"DeprecationWarning","filename":"/home/airflow/.local/lib/python3.12/site-packages/airflow/models/variable.py","lineno":151,"logger":"py.warnings"}
+{"timestamp":"2026-04-05T04:51:06.181382Z","level":"info","event":"origin_date not provided; auto-resolved to 2026-03-30","logger":"unusual_prefix_0f518ee9cec5cf38c2481cf42befdcbf7eb00a10_ai_orderfood_pipeline","filename":"ai_orderfood_pipeline.py","lineno":143}
+{"timestamp":"2026-04-05T04:51:06.181594Z","level":"info","event":"origin_date = 2026-03-30","logger":"unusual_prefix_0f518ee9cec5cf38c2481cf42befdcbf7eb00a10_ai_orderfood_pipeline","filename":"ai_orderfood_pipeline.py","lineno":148}
+{"timestamp":"2026-04-05T04:51:06.184435Z","level":"info","event":"=== generate_weekly_forecast: origin_date=2026-03-30 ===","logger":"unusual_prefix_0f518ee9cec5cf38c2481cf42befdcbf7eb00a10_ai_orderfood_pipeline","filename":"ai_orderfood_pipeline.py","lineno":204}
+{"timestamp":"2026-04-05T04:51:06.184590Z","level":"info","event":"Running: /usr/python/bin/python3.12 -m app.pipeline.weekly_forecast --origin-date 2026-03-30 --baseline-config /opt/EDA_v3/configs/config_001.yaml --config /opt/EDA_v3/configs/config_003_lgbm_final.yaml --model-path /opt/EDA_v3/runs/exp_003_lgbm_tweedie_p15_lag7_14_21_28_finalfeat__20260305_223540/lgbm_final.txt  (cwd=/opt/airflow)","logger":"unusual_prefix_0f518ee9cec5cf38c2481cf42befdcbf7eb00a10_ai_orderfood_pipeline","filename":"ai_orderfood_pipeline.py","lineno":100}
+{"timestamp":"2026-04-05T04:51:07.873440Z","level":"error","event":"Traceback (most recent call last):","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.874155Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 143, in __init__","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.874680Z","level":"error","event":"    self._dbapi_connection = engine.raw_connection()","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.874961Z","level":"error","event":"                             ^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.875306Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 3317, in raw_connection","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.875724Z","level":"error","event":"    return self.pool.connect()","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.876111Z","level":"error","event":"           ^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.876471Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/pool/base.py\", line 448, in connect","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.876818Z","level":"error","event":"    return _ConnectionFairy._checkout(self)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.877130Z","level":"error","event":"           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.877403Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/pool/base.py\", line 1272, in _checkout","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.877817Z","level":"error","event":"    fairy = _ConnectionRecord.checkout(pool)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.878052Z","level":"error","event":"            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.878334Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/pool/base.py\", line 712, in checkout","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.878712Z","level":"error","event":"    rec = pool._do_get()","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.879102Z","level":"error","event":"          ^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.879431Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/pool/impl.py\", line 177, in _do_get","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.879836Z","level":"error","event":"    with util.safe_reraise():","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.880135Z","level":"error","event":"         ^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.880518Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py\", line 121, in __exit__","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.880852Z","level":"error","event":"    raise exc_value.with_traceback(exc_tb)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.881186Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/pool/impl.py\", line 175, in _do_get","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.881528Z","level":"error","event":"    return self._create_connection()","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.881835Z","level":"error","event":"           ^^^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.882207Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/pool/base.py\", line 389, in _create_connection","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.882564Z","level":"error","event":"    return _ConnectionRecord(self)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.882870Z","level":"error","event":"           ^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.883207Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/pool/base.py\", line 674, in __init__","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.883772Z","level":"error","event":"    self.__connect()","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.884096Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/pool/base.py\", line 900, in __connect","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.884527Z","level":"error","event":"    with util.safe_reraise():","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.884900Z","level":"error","event":"         ^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.885304Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py\", line 121, in __exit__","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.885697Z","level":"error","event":"    raise exc_value.with_traceback(exc_tb)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.886110Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/pool/base.py\", line 896, in __connect","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.886444Z","level":"error","event":"    self.dbapi_connection = connection = pool._invoke_creator(self)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.886812Z","level":"error","event":"                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.887196Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/engine/create.py\", line 667, in connect","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.887628Z","level":"error","event":"    return dialect.connect(*cargs_tup, **cparams)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.888029Z","level":"error","event":"           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.888449Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/engine/default.py\", line 630, in connect","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.888836Z","level":"error","event":"    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.889165Z","level":"error","event":"           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.889477Z","level":"error","event":"pyodbc.Error: ('01000', \"[01000] [unixODBC][Driver Manager]Can't open lib 'ODBC Driver 17 for SQL Server' : file not found (0) (SQLDriverConnect)\")","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.889807Z","level":"error","event":"","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.890162Z","level":"error","event":"The above exception was the direct cause of the following exception:","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.890494Z","level":"error","event":"","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.890832Z","level":"error","event":"Traceback (most recent call last):","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.891203Z","level":"error","event":"  File \"<frozen runpy>\", line 198, in _run_module_as_main","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.891641Z","level":"error","event":"  File \"<frozen runpy>\", line 88, in _run_code","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.892070Z","level":"error","event":"  File \"/opt/airflow/app/pipeline/weekly_forecast.py\", line 291, in <module>","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.892542Z","level":"error","event":"    main()","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.892910Z","level":"error","event":"  File \"/opt/airflow/app/pipeline/weekly_forecast.py\", line 133, in main","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.893244Z","level":"error","event":"    df = load_and_clean(cfg_base)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.893595Z","level":"error","event":"         ^^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.893908Z","level":"error","event":"  File \"/opt/airflow/app/forecasting/data.py\", line 61, in load_and_clean","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.894253Z","level":"error","event":"    df = pd.read_sql(f\"SELECT * FROM {view}\", engine)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.894575Z","level":"error","event":"         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.894920Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/pandas/io/sql.py\", line 706, in read_sql","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.895303Z","level":"error","event":"    with pandasSQL_builder(con) as pandas_sql:","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.895672Z","level":"error","event":"         ^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.896031Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/pandas/io/sql.py\", line 908, in pandasSQL_builder","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.896392Z","level":"error","event":"    return SQLDatabase(con, schema, need_transaction)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.896780Z","level":"error","event":"           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.897144Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/pandas/io/sql.py\", line 1648, in __init__","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.897771Z","level":"error","event":"    con = self.exit_stack.enter_context(con.connect())","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.898140Z","level":"error","event":"                                        ^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.898473Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 3293, in connect","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.898765Z","level":"error","event":"    return self._connection_cls(self)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.899049Z","level":"error","event":"           ^^^^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.899444Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 145, in __init__","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.899873Z","level":"error","event":"    Connection._handle_dbapi_exception_noconnection(","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.900236Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 2448, in _handle_dbapi_exception_noconnection","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.900610Z","level":"error","event":"    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.901003Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 143, in __init__","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.901357Z","level":"error","event":"    self._dbapi_connection = engine.raw_connection()","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.901685Z","level":"error","event":"                             ^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.902055Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/engine/base.py\", line 3317, in raw_connection","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.902460Z","level":"error","event":"    return self.pool.connect()","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.902790Z","level":"error","event":"           ^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.903266Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/pool/base.py\", line 448, in connect","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.903656Z","level":"error","event":"    return _ConnectionFairy._checkout(self)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.904017Z","level":"error","event":"           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.904400Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/pool/base.py\", line 1272, in _checkout","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.904829Z","level":"error","event":"    fairy = _ConnectionRecord.checkout(pool)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.905253Z","level":"error","event":"            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.905640Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/pool/base.py\", line 712, in checkout","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.906006Z","level":"error","event":"    rec = pool._do_get()","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.906372Z","level":"error","event":"          ^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.906698Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/pool/impl.py\", line 177, in _do_get","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.907115Z","level":"error","event":"    with util.safe_reraise():","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.907439Z","level":"error","event":"         ^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.907843Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py\", line 121, in __exit__","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.908174Z","level":"error","event":"    raise exc_value.with_traceback(exc_tb)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.908501Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/pool/impl.py\", line 175, in _do_get","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.908780Z","level":"error","event":"    return self._create_connection()","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.909157Z","level":"error","event":"           ^^^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.909551Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/pool/base.py\", line 389, in _create_connection","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.909926Z","level":"error","event":"    return _ConnectionRecord(self)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.910300Z","level":"error","event":"           ^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.910659Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/pool/base.py\", line 674, in __init__","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.911083Z","level":"error","event":"    self.__connect()","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.911473Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/pool/base.py\", line 900, in __connect","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.911885Z","level":"error","event":"    with util.safe_reraise():","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.912278Z","level":"error","event":"         ^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.912679Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py\", line 121, in __exit__","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.913030Z","level":"error","event":"    raise exc_value.with_traceback(exc_tb)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.913401Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/pool/base.py\", line 896, in __connect","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.913729Z","level":"error","event":"    self.dbapi_connection = connection = pool._invoke_creator(self)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.914057Z","level":"error","event":"                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.914386Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/engine/create.py\", line 667, in connect","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.914709Z","level":"error","event":"    return dialect.connect(*cargs_tup, **cparams)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.915014Z","level":"error","event":"           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.915415Z","level":"error","event":"  File \"/home/airflow/.local/lib/python3.12/site-packages/sqlalchemy/engine/default.py\", line 630, in connect","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.915762Z","level":"error","event":"    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.916016Z","level":"error","event":"           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.916398Z","level":"error","event":"sqlalchemy.exc.DBAPIError: (pyodbc.Error) ('01000', \"[01000] [unixODBC][Driver Manager]Can't open lib 'ODBC Driver 17 for SQL Server' : file not found (0) (SQLDriverConnect)\")","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:07.916737Z","level":"error","event":"(Background on this error at: https://sqlalche.me/e/20/dbapi)","logger":"task.stderr"}
+{"timestamp":"2026-04-05T04:51:08.129428Z","level":"error","event":"Task failed with exception","logger":"task","filename":"task_runner.py","lineno":1186,"error_detail":[{"exc_type":"RuntimeError","exc_value":"Subprocess failed (exit 1): /usr/python/bin/python3.12 -m app.pipeline.weekly_forecast --origin-date 2026-03-30 --baseline-config /opt/EDA_v3/configs/config_001.yaml --config /opt/EDA_v3/configs/config_003_lgbm_final.yaml --model-path /opt/EDA_v3/runs/exp_003_lgbm_tweedie_p15_lag7_14_21_28_finalfeat__20260305_223540/lgbm_final.txt","exc_notes":[],"syntax_error":null,"is_cause":false,"frames":[{"filename":"/home/airflow/.local/lib/python3.12/site-packages/airflow/sdk/execution_time/task_runner.py","lineno":1112,"name":"run"},{"filename":"/home/airflow/.local/lib/python3.12/site-packages/airflow/sdk/execution_time/task_runner.py","lineno":1528,"name":"_execute_task"},{"filename":"/home/airflow/.local/lib/python3.12/site-packages/airflow/sdk/bases/operator.py","lineno":417,"name":"wrapper"},{"filename":"/home/airflow/.local/lib/python3.12/site-packages/airflow/providers/standard/operators/python.py","lineno":228,"name":"execute"},{"filename":"/home/airflow/.local/lib/python3.12/site-packages/airflow/providers/standard/operators/python.py","lineno":251,"name":"execute_callable"},{"filename":"/home/airflow/.local/lib/python3.12/site-packages/airflow/sdk/execution_time/callback_runner.py","lineno":82,"name":"run"},{"filename":"/opt/airflow/dags/ai_orderfood_pipeline.py","lineno":205,"name":"task_generate_weekly_forecast"},{"filename":"/opt/airflow/dags/ai_orderfood_pipeline.py","lineno":108,"name":"_run_subprocess"}],"is_group":false,"exceptions":[]}]}
+{"timestamp":"2026-04-05T04:51:08.160209Z","level":"info","event":"Task instance in failure state","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:08.160843Z","level":"info","event":"Task start","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:08.161242Z","level":"info","event":"Task:<Task(PythonOperator): generate_weekly_forecast>","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:08.161571Z","level":"info","event":"Failure caused by Subprocess failed (exit 1): /usr/python/bin/python3.12 -m app.pipeline.weekly_forecast --origin-date 2026-03-30 --baseline-config /opt/EDA_v3/configs/config_001.yaml --config /opt/EDA_v3/configs/config_003_lgbm_final.yaml --model-path /opt/EDA_v3/runs/exp_003_lgbm_tweedie_p15_lag7_14_21_28_finalfeat__20260305_223540/lgbm_final.txt","logger":"task.stdout"}

@@ -101,7 +101,7 @@ def get_pg_session():
     if not ENV_PATH.exists():
         raise RuntimeError(f"pg.env not found: {ENV_PATH}")
 
-    load_dotenv(ENV_PATH)
+    load_dotenv(ENV_PATH, )
     
     host = os.getenv("PG_HOST")
     port = os.getenv("PG_PORT")

@@ -1,0 +1,53 @@
+{"timestamp":"2026-04-05T04:50:58.149341Z","level":"info","event":"DAG bundles loaded: dags-folder, example_dags","logger":"airflow.dag_processing.bundles.manager.DagBundlesManager","filename":"manager.py","lineno":179}
+{"timestamp":"2026-04-05T04:50:58.152613Z","level":"info","event":"Filling up the DagBag from /opt/airflow/dags/ai_orderfood_pipeline.py","logger":"airflow.models.dagbag.BundleDagBag","filename":"dagbag.py","lineno":593}
+{"timestamp":"2026-04-05T04:50:58.182343Z","level":"warning","event":"The `airflow.operators.python.PythonOperator` attribute is deprecated. Please use `'airflow.providers.standard.operators.python.PythonOperator'`.","category":"DeprecatedImportWarning","filename":"/opt/airflow/dags/ai_orderfood_pipeline.py","lineno":49,"logger":"py.warnings"}
+{"timestamp":"2026-04-05T04:50:58.185788Z","level":"info","event":"Stats instance was created in PID 7 but accessed in PID 346. Re-initializing.","logger":"airflow.stats","filename":"stats.py","lineno":57}
+{"timestamp":"2026-04-05T04:50:58.231024Z","level":"info","event":"Task instance is in running state","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:50:58.231503Z","level":"info","event":" Previous state of the Task instance: TaskInstanceState.QUEUED","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:50:58.232099Z","level":"info","event":"Current task name:sync_dw_data","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:50:58.232596Z","level":"info","event":"Dag name:ai_orderfood_weekly_pipeline","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:50:58.235208Z","level":"info","event":"=== sync_dw_data: loading Excel into MSSQL staging ===","logger":"unusual_prefix_0f518ee9cec5cf38c2481cf42befdcbf7eb00a10_ai_orderfood_pipeline","filename":"ai_orderfood_pipeline.py","lineno":167}
+{"timestamp":"2026-04-05T04:50:58.237156Z","level":"info","event":"Running: /usr/python/bin/python3.12 /opt/airflow/dw_mssql/etl/02_load_excel_to_stg.py  (cwd=/opt/airflow)","logger":"unusual_prefix_0f518ee9cec5cf38c2481cf42befdcbf7eb00a10_ai_orderfood_pipeline","filename":"ai_orderfood_pipeline.py","lineno":100}
+{"timestamp":"2026-04-05T04:51:04.821854Z","level":"info","event":"[INFO] Env:         /opt/airflow/dw_mssql/config/dw.env","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:04.822473Z","level":"info","event":"[INFO] Sales Excel: /opt/airflow/dw_mssql/data/sales.xlsx (sheet=Sheet1) -> stg.stg_sales","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:04.823182Z","level":"info","event":"[INFO] Menu  Excel: /opt/airflow/dw_mssql/data/menu.xlsx (sheet=foods) -> stg.stg_menu","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:04.823645Z","level":"info","event":"[INFO] Mode: only=all, truncate=yes","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:04.824009Z","level":"info","event":"[INFO] Sales rows ready: 9,739","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:04.824376Z","level":"info","event":"[INFO] Menu rows ready: 2,051","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:04.824693Z","level":"info","event":"[INFO] TRUNCATE sales stg ...","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:04.825071Z","level":"info","event":"[INFO] TRUNCATE menu stg ...","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:04.825449Z","level":"info","event":"[INFO] Inserting sales ...","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:04.825807Z","level":"info","event":"[OK] Sales inserted: 9,739","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:04.826133Z","level":"info","event":"[INFO] Inserting menu ...","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:04.826468Z","level":"info","event":"[OK] Menu inserted: 2,051","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:04.826816Z","level":"info","event":"[INFO] stg.stg_sales rows: 9,739","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:04.827175Z","level":"info","event":"[INFO] stg.stg_menu rows: 2,051","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:04.954749Z","level":"info","event":"Running: /usr/python/bin/python3.12 /opt/airflow/dw_mssql/etl/03_etl_menu_to_dw.py  (cwd=/opt/airflow)","logger":"unusual_prefix_0f518ee9cec5cf38c2481cf42befdcbf7eb00a10_ai_orderfood_pipeline","filename":"ai_orderfood_pipeline.py","lineno":100}
+{"timestamp":"2026-04-05T04:51:05.518455Z","level":"info","event":"[INFO] Env: /opt/airflow/dw_mssql/config/dw.env","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.519022Z","level":"info","event":"[INFO] Source: stg.stg_menu -> Targets: dw.canonical_dish, dw.bridge_pos_food_to_canonical","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.519382Z","level":"info","event":"[INFO] Mode: only=all, batch_size=2000, backfill=yes","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.519772Z","level":"info","event":"[INFO] Extracting latest stg_menu rows per food_id ...","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.520048Z","level":"info","event":"[INFO] stg_menu distinct food_id rows: 2,051","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.520319Z","level":"info","event":"[INFO] canonical candidates: 1,641","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.520598Z","level":"info","event":"[INFO] bridge rows: 2,051","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.520991Z","level":"info","event":"[INFO] Creating temp tables ...","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.521304Z","level":"info","event":"[INFO] Loading #canonical_src ...","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.521575Z","level":"info","event":"[OK] #canonical_src inserted: 1,641","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.521844Z","level":"info","event":"[INFO] MERGE -> dw.canonical_dish ...","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.522113Z","level":"info","event":"[OK] canonical MERGE done.","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.522417Z","level":"info","event":"[INFO] Loading #bridge_src ...","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.522692Z","level":"info","event":"[OK] #bridge_src inserted: 2,051","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.522985Z","level":"info","event":"[INFO] MERGE -> dw.bridge_pos_food_to_canonical ...","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.523239Z","level":"info","event":"[OK] bridge MERGE done.","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.523503Z","level":"info","event":"[INFO] Backfill first/last seen dates from stg_sales ...","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.523813Z","level":"info","event":"[OK] backfill done.","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.524069Z","level":"info","event":"[OK] Commit.","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.524344Z","level":"info","event":"[INFO] stg.stg_menu rows: 2,051","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.524597Z","level":"info","event":"[INFO] dw.canonical_dish rows: 1,638","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.524845Z","level":"info","event":"[INFO] dw.bridge_pos_food_to_canonical rows: 2,051","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.525130Z","level":"info","event":"[INFO] All sales food_id are mapped in bridge. ✅","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.530940Z","level":"info","event":"=== sync_dw_data: complete ===","logger":"unusual_prefix_0f518ee9cec5cf38c2481cf42befdcbf7eb00a10_ai_orderfood_pipeline","filename":"ai_orderfood_pipeline.py","lineno":174}
+{"timestamp":"2026-04-05T04:51:05.531983Z","level":"info","event":"Done. Returned value was: None","logger":"airflow.task.operators.airflow.providers.standard.operators.python.PythonOperator","filename":"python.py","lineno":230}
+{"timestamp":"2026-04-05T04:51:05.552651Z","level":"info","event":"Task instance in success state","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.553164Z","level":"info","event":" Previous state of the Task instance: TaskInstanceState.RUNNING","logger":"task.stdout"}
+{"timestamp":"2026-04-05T04:51:05.553673Z","level":"info","event":"Task operator:<Task(PythonOperator): sync_dw_data>","logger":"task.stdout"}

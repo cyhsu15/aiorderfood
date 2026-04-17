@@ -378,6 +378,79 @@ def attach_forecast_to_recommendations(
     return recs
 
 
+def _build_forecast_summary(recs: List[Dict[str, Any]]) -> str:
+    """
+    將已附加預測資料的推薦列表轉換成供 LLM 閱讀的摘要文字。
+    僅在 forecast_status == "ok" 時才輸出有意義的預測值。
+    """
+    lines = []
+    for r in recs:
+        name = r.get("name", "?")
+        status = r.get("forecast_status", "missing")
+        if status == "ok":
+            series = r.get("forecast_6d", [])
+            if series:
+                avg_yhat = sum(p["yhat"] for p in series) / len(series)
+                peak = max(series, key=lambda p: p["yhat"])
+                lines.append(
+                    f'- {name}：預測近{len(series)}日平均需求 {avg_yhat:.1f}，'
+                    f'高峰日 {peak["target_date"]} 需求 {peak["yhat"]:.1f}'
+                )
+            else:
+                lines.append(f"- {name}：無預測資料")
+        elif status == "stale":
+            lines.append(f"- {name}：預測資料過時，請參考菜單實際情況")
+        else:
+            lines.append(f"- {name}：無預測資料")
+    return "\n".join(lines) if lines else "（無可用預測資料）"
+
+
+def _rerank_with_forecast(
+    candidates: List[Dict[str, Any]],
+    forecast_summary: str,
+    extra_context: str = "",
+) -> List[Dict[str, Any]]:
+    """
+    第二階段 LLM 呼叫：根據需求預測對候選菜品重新排序並更新推薦理由。
+    若 LLM 失敗則直接回傳原始候選列表，不中斷主流程。
+    """
+    candidate_names = [r["name"] for r in candidates]
+    system_prompt = f"""你是錦霞樓的智能餐點推薦助理。
+以下是初步候選菜品與未來需求預測資料（yhat 代表預測銷售量，數值越高代表越受歡迎）：
+
+{forecast_summary}
+
+{extra_context}
+
+請根據需求預測，從候選菜品中選出三道最值得推薦的菜，優先選擇預測需求較高的菜。
+候選菜品：{json.dumps(candidate_names, ensure_ascii=False)}
+
+輸出 JSON（菜名必須完全來自候選列表，禁止虛構）：
+{{"message": "string", "recommendations": [{{"name": "string", "reason": "string"}}]}}"""
+
+    llm_json = ChatOpenAI(
+        model="gpt-4o-mini",
+        temperature=0.2,
+        model_kwargs={"response_format": {"type": "json_object"}},
+    )
+    try:
+        result = llm_json.invoke([{"role": "system", "content": system_prompt}])
+        data = json.loads(result.content)
+        reranked_names = [r["name"] for r in data.get("recommendations", [])]
+        # 用原始候選 dict 為基礎，替換 reason；過濾掉不在候選中的名字
+        name_to_candidate = {r["name"]: r for r in candidates}
+        reranked = []
+        for rec in data.get("recommendations", []):
+            if rec["name"] in name_to_candidate:
+                merged = {**name_to_candidate[rec["name"]], "reason": rec["reason"]}
+                reranked.append(merged)
+        logger.info(f"預測重排結果: {reranked_names}")
+        return reranked if reranked else candidates
+    except Exception as e:
+        logger.warning(f"預測重排 LLM 失敗，使用原始順序: {e}")
+        return candidates
+
+
 # ==========================================================
 # 🧠 狀態結構
 # ==========================================================
@@ -627,7 +700,7 @@ def budget_node(state: GraphState) -> GraphState:
         for cat in menu
     )
 
-    # === 4️⃣ 呼叫 LLM 生成推薦 ===
+    # === 4️⃣ 第一階段 LLM：挑選符合預算的候選菜（多選幾道以利後續重排）===
     system_prompt = f"""
 你是錦霞樓的智能餐點規劃師。
 目前使用【{plan_mode}】：
@@ -638,7 +711,7 @@ def budget_node(state: GraphState) -> GraphState:
 請根據以下菜單（節錄）：
 {menu_summary}
 
-挑選出三道最合適的菜，禁止虛構菜名。
+挑選出五道符合預算的候選菜（稍後會依需求預測再精選三道），禁止虛構菜名。
 輸出 JSON：
 {{"message": "string", "recommendations": [{{"name": "string", "reason": "string"}}]}}
 """
@@ -654,7 +727,7 @@ def budget_node(state: GraphState) -> GraphState:
     except Exception as e:
         data = {"message": f"預算推薦失敗：{e}", "recommendations": []}
 
-    # === 5️⃣ 從數據庫查詢完整菜品資訊 ===
+    # === 5️⃣ DB 查詢：取得 price_id 等完整資訊（批次，無 N+1）===
     db = get_db_context()
     if not db:
         logger.error("數據庫連接未設置", extra={"node": "budget_node"})
@@ -663,18 +736,31 @@ def budget_node(state: GraphState) -> GraphState:
             "請檢查 process_chat_request() 中的 set_db_context() 調用。"
         )
 
-    # 從數據庫查詢完整菜品資訊並豐富推薦列表
-    data["recommendations"] = enrich_recommendations_with_db_data(
+    candidates = enrich_recommendations_with_db_data(
         db,
         data.get("recommendations", []),
         default_reason="超值推薦"
     )
-    logger.info(f"預算推薦 [{plan_mode}]: {people}人 × {per_person}元 = {total}元 | 推薦 {len(data['recommendations'])} 道菜")
-    logger.debug(f"推薦數據結構: {json.dumps(data, ensure_ascii=False, indent=2)}")
-    
-    data["recommendations"] = attach_forecast_to_recommendations(db, data["recommendations"])
+    logger.info(f"預算候選菜 [{plan_mode}]: {[r['name'] for r in candidates]}")
 
-    # === 6️⃣ 回傳結果 ===
+    # === 6️⃣ 批次取得預測資料並附加到候選列表 ===
+    candidates = attach_forecast_to_recommendations(db, candidates)
+    forecast_summary = _build_forecast_summary(candidates)
+    logger.debug(f"預測摘要:\n{forecast_summary}")
+
+    # === 7️⃣ 第二階段 LLM：依需求預測重排，選出最終三道 ===
+    final_recs = _rerank_with_forecast(
+        candidates,
+        forecast_summary,
+        extra_context=f"預算模式：{plan_mode}，{people}人，每人約{per_person}元",
+    )
+    final_recs = final_recs[:3]
+
+    data["recommendations"] = final_recs
+    logger.info(f"預算推薦完成（含預測重排）[{plan_mode}]: {people}人 × {per_person}元 = {total}元 | 推薦 {[r['name'] for r in final_recs]}")
+    logger.debug(f"推薦數據結構: {json.dumps(data, ensure_ascii=False, indent=2, default=str)}")
+
+    # === 8️⃣ 回傳結果 ===
     return {
         "messages": [AIMessage(content=data.get("message", "完成預算推薦"))],
         "response": data,
@@ -691,7 +777,7 @@ def recommend_node(state: GraphState) -> GraphState:
     memory = state.get("memory_context", {}) or {}
     avoid_terms = memory.get("avoid", [])
 
-    # 過濾菜單
+    # === 1️⃣ 過濾菜單（忌口）===
     filtered_menu = []
     for cat in menu:
         dishes = [
@@ -701,18 +787,16 @@ def recommend_node(state: GraphState) -> GraphState:
         if dishes:
             filtered_menu.append({**cat, "dishes": dishes})
 
-    # 若全部被過濾
     if not filtered_menu:
         reply = f"由於您不吃 {', '.join(avoid_terms)}，目前菜單中沒有可推薦的菜色。"
         return {"response": {"message": reply, "recommendations": []},
                 "messages": [AIMessage(content=reply)]}
 
-    # 建立摘要
+    # === 2️⃣ 第一階段 LLM：從菜單挑選候選菜（多選幾道以利後續重排）===
     menu_summary = "\n".join(
         "、".join(d.get("name", "") for d in cat.get("dishes", [])[:10])
         for cat in filtered_menu
     )
-
     system_prompt = f"""
 你是錦霞樓的餐點推薦助理。
 使用者訊息：「{msg}」
@@ -720,7 +804,7 @@ def recommend_node(state: GraphState) -> GraphState:
 菜單如下（節錄）：
 {menu_summary}
 
-請選出三道推薦菜，禁止虛構菜名。
+請選出五道候選推薦菜（稍後會依需求預測再精選三道），禁止虛構菜名。
 輸出 JSON：
 {{"message": "string",
   "recommendations": [{{"name":"string","reason":"string"}}]
@@ -731,14 +815,13 @@ def recommend_node(state: GraphState) -> GraphState:
         temperature=0.3,
         model_kwargs={"response_format": {"type": "json_object"}},
     )
-
     try:
         result = llm_json.invoke([{"role": "system", "content": system_prompt}])
         data = json.loads(result.content)
     except Exception as e:
         data = {"message": f"推薦失敗：{e}", "recommendations": []}
 
-    # 從數據庫查詢完整菜品資訊
+    # === 3️⃣ DB 查詢：取得 price_id 等完整資訊（批次，無 N+1）===
     db = get_db_context()
     if not db:
         logger.error("數據庫連接未設置", extra={"node": "recommend_node"})
@@ -747,17 +830,31 @@ def recommend_node(state: GraphState) -> GraphState:
             "請檢查 process_chat_request() 中的 set_db_context() 調用。"
         )
 
-    # 從數據庫查詢完整菜品資訊並豐富推薦列表
-    data["recommendations"] = enrich_recommendations_with_db_data(
+    candidates = enrich_recommendations_with_db_data(
         db,
         data.get("recommendations", []),
         default_reason="精選推薦"
     )
-    logger.info(f"智能推薦完成: 生成 {len(data['recommendations'])} 道菜 → {[r['name'] for r in data['recommendations']]}")
-    logger.debug(f"推薦數據結構: {json.dumps(data, ensure_ascii=False, indent=2)}")
+    logger.info(f"候選菜品: {[r['name'] for r in candidates]}")
 
-    data["recommendations"] = attach_forecast_to_recommendations(db, data["recommendations"])
-    
+    # === 4️⃣ 批次取得預測資料並附加到候選列表 ===
+    candidates = attach_forecast_to_recommendations(db, candidates)
+    forecast_summary = _build_forecast_summary(candidates)
+    logger.debug(f"預測摘要:\n{forecast_summary}")
+
+    # === 5️⃣ 第二階段 LLM：依需求預測重排，選出最終三道 ===
+    final_recs = _rerank_with_forecast(
+        candidates,
+        forecast_summary,
+        extra_context=f'使用者需求：「{msg}」',
+    )
+    # 確保只回傳三道
+    final_recs = final_recs[:3]
+
+    data["recommendations"] = final_recs
+    logger.info(f"智能推薦完成（含預測重排）: {[r['name'] for r in final_recs]}")
+    logger.debug(f"推薦數據結構: {json.dumps(data, ensure_ascii=False, indent=2, default=str)}")
+
     return {
         "messages": [AIMessage(content=data.get("message", "完成推薦"))],
         "response": data,
