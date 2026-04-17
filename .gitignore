@@ -1,5 +1,6 @@
 AIOrderFood.code-workspace
 .env
+**/.env
 **/__pycache__
 alembic.ini
 .pytest_cache
@@ -10,3 +11,4 @@ static/public/images/dish_optimized/*
 tool/dish_img_generate/*
 static/public/images/dish/*.png
 nul
+airflow-docker/config/airflow.cfg
